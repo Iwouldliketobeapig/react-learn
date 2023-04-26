@@ -2616,7 +2616,7 @@ function dispatchSetState<S, A>(
     }
   }
 
-  const lane = requestUpdateLane(fiber);
+  const lane = requestUpdateLane(fiber); // 获取lane
 
   const update: Update<S, A> = {
     lane,
@@ -2625,8 +2625,9 @@ function dispatchSetState<S, A>(
     eagerState: null,
     next: (null: any),
   };
-
+  
   if (isRenderPhaseUpdate(fiber)) {
+    // 当前正在被渲染
     enqueueRenderPhaseUpdate(queue, update);
   } else {
     const alternate = fiber.alternate;
