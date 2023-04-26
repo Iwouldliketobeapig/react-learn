@@ -7,14 +7,14 @@
  * @flow
  */
 
-import type {SchedulerCallback} from './Scheduler';
+import type { SchedulerCallback } from './Scheduler';
 
 import {
   DiscreteEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
 } from './ReactEventPriorities';
-import {ImmediatePriority, scheduleCallback} from './Scheduler';
+import { ImmediatePriority, scheduleCallback } from './Scheduler';
 
 let syncQueue: Array<SchedulerCallback> | null = null;
 let includesLegacySyncCallbacks: boolean = false;
@@ -49,6 +49,7 @@ export function flushSyncCallbacksOnlyInLegacyMode() {
 }
 
 export function flushSyncCallbacks(): null {
+  // flushSyncCallbacks是否正在执行
   if (!isFlushingSyncQueue && syncQueue !== null) {
     // Prevent re-entrance.
     isFlushingSyncQueue = true;
