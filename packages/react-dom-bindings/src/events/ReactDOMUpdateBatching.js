@@ -71,5 +71,5 @@ export function setBatchingImplementation(
 ) {
   batchedUpdatesImpl = _batchedUpdatesImpl;
   discreteUpdatesImpl = _discreteUpdatesImpl;
-  flushSyncImpl = _flushSyncImpl;
+  flushSyncImpl = _flushSyncImpl; // flushSync
 }

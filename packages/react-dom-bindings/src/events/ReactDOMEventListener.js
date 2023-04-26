@@ -111,6 +111,7 @@ export function createEventListenerWrapperWithPriority(
   );
 }
 
+// 事件监听
 function dispatchDiscreteEvent(
   domEventName,
   eventSystemFlags,
