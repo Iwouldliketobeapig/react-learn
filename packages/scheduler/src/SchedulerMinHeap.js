@@ -14,16 +14,19 @@ type Node = {
   ...
 };
 
+// 插入新值，并重新排序
 export function push<T: Node>(heap: Heap<T>, node: T): void {
   const index = heap.length;
   heap.push(node);
   siftUp(heap, node, index);
 }
 
+// 获取小顶堆的堆顶
 export function peek<T: Node>(heap: Heap<T>): T | null {
   return heap.length === 0 ? null : heap[0];
 }
 
+// 重新排序小顶堆
 export function pop<T: Node>(heap: Heap<T>): T | null {
   if (heap.length === 0) {
     return null;
@@ -37,10 +40,11 @@ export function pop<T: Node>(heap: Heap<T>): T | null {
   return first;
 }
 
+// 跟父节点对比，小顶堆的排序过程
 function siftUp<T: Node>(heap: Heap<T>, node: T, i: number): void {
   let index = i;
   while (index > 0) {
-    const parentIndex = (index - 1) >>> 1;
+    const parentIndex = (index - 1) >>> 1; // 无符号右移
     const parent = heap[parentIndex];
     if (compare(parent, node) > 0) {
       // The parent is larger. Swap positions.

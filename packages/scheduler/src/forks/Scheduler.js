@@ -121,6 +121,7 @@ const isInputPending =
 
 const continuousOptions = {includeContinuous: enableIsInputPendingContinuous};
 
+// 将timerQueue中的过期任务推送到taskQueue中
 function advanceTimers(currentTime: number) {
   // Check for tasks that are no longer delayed and add them to the queue.
   let timer = peek(timerQueue);
@@ -234,6 +235,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
         // $FlowFixMe[incompatible-call] found when upgrading Flow
         markTaskRun(currentTask, currentTime);
       }
+      // 执行callback并获取callback得返回值
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
@@ -245,6 +247,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
           // $FlowFixMe[incompatible-call] found when upgrading Flow
           markTaskYield(currentTask, currentTime);
         }
+        // 再一次得调用advanceTimers
         advanceTimers(currentTime);
         return true;
       } else {
@@ -362,6 +365,7 @@ function unstable_scheduleCallback(
   }
 
   var timeout;
+  // 根据事件的优先级确定timeout
   switch (priorityLevel) {
     case ImmediatePriority:
       timeout = IMMEDIATE_PRIORITY_TIMEOUT;

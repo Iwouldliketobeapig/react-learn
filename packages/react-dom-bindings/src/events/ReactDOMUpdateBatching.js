@@ -1,4 +1,5 @@
 /**
+ * 本部分代码主要用来更新渲染的
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -48,6 +49,7 @@ export function batchedUpdates(fn, a, b) {
   if (isInsideEventHandler) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state.
+    // 如果我们目前在另一个批量更行中，我们需要等到它完全完成才能恢复状态。
     return fn(a, b);
   }
   isInsideEventHandler = true;
@@ -64,6 +66,7 @@ export function discreteUpdates(fn, a, b, c, d) {
   return discreteUpdatesImpl(fn, a, b, c, d);
 }
 
+// 暴露函数用来初始化batchUpdateImp、discreateUpdateImpl和flushSyncImpl
 export function setBatchingImplementation(
   _batchedUpdatesImpl,
   _discreteUpdatesImpl,
