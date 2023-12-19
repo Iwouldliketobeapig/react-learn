@@ -95,12 +95,15 @@ var taskIdCounter = 1;
 var isSchedulerPaused = false;
 
 var currentTask = null;
+// 当前正在执行任务的优先级
 var currentPriorityLevel = NormalPriority;
 
 // This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
 
+// TAG 这玩意又是用来干啥子的
 var isHostCallbackScheduled = false;
+// TAG 这玩意是用来干啥子
 var isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
@@ -151,6 +154,7 @@ function handleTimeout(currentTime: number) {
   advanceTimers(currentTime);
 
   if (!isHostCallbackScheduled) {
+    // 如果taskQueue中有任务就去执行flusWork
     if (peek(taskQueue) !== null) {
       isHostCallbackScheduled = true;
       requestHostCallback(flushWork);
@@ -163,6 +167,7 @@ function handleTimeout(currentTime: number) {
   }
 }
 
+// 接受是否有空闲时间和当前任务开始时间
 function flushWork(hasTimeRemaining: boolean, initialTime: number) {
   if (enableProfiling) {
     markSchedulerUnsuspended(initialTime);
@@ -178,6 +183,7 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
 
   isPerformingWork = true;
   const previousPriorityLevel = currentPriorityLevel;
+  //LEARN 如果在try中return了，finally还会执行吗？ ---答案是会执行，又增减了奇怪的只是
   try {
     if (enableProfiling) {
       try {
@@ -350,6 +356,7 @@ function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   };
 }
 
+// TODO 正在看这里
 function unstable_scheduleCallback(
   priorityLevel: PriorityLevel, // 优先级
   callback: Callback, // 回调函数
@@ -404,6 +411,7 @@ function unstable_scheduleCallback(
     newTask.isQueued = false;
   }
 
+  // 根据任务优先级计算出的时间如果大于当前时间，则是延迟任务，将任务推到timerQueue中
   if (startTime > currentTime) {
     // This is a delayed task.
     newTask.sortIndex = startTime;
@@ -472,8 +480,9 @@ function unstable_cancelCallback(task: Task) {
 function unstable_getCurrentPriorityLevel(): PriorityLevel {
   return currentPriorityLevel;
 }
-
+// 
 let isMessageLoopRunning = false;
+// 主任务函数
 let scheduledHostCallback:
   | null
   | ((
