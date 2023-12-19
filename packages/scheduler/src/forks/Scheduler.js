@@ -123,7 +123,7 @@ const continuousOptions = {includeContinuous: enableIsInputPendingContinuous};
 
 // 将timerQueue中的过期任务推送到taskQueue中
 function advanceTimers(currentTime: number) {
-  // Check for tasks that are no longer delayed and add them to the queue.
+  // Check for tasks that are no longer delayed and add them to the queue. 检查不再延迟的任务并将其添加到队列中。
   let timer = peek(timerQueue);
   while (timer !== null) {
     if (timer.callback === null) {
@@ -209,12 +209,15 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
 
 function workLoop(hasTimeRemaining: boolean, initialTime: number) {
   let currentTime = initialTime;
+   // 将timerQueue中的紧急任务挑选出来推到taskQueue中，并重新排队
   advanceTimers(currentTime);
+  // 获取堆顶点（只是获取，没有从堆里面推出）
   currentTask = peek(taskQueue);
   while (
     currentTask !== null &&
     !(enableSchedulerDebugging && isSchedulerPaused)
   ) {
+    // 任务过期事件在当前时间之后，且已经没有剩余时间
     if (
       currentTask.expirationTime > currentTime &&
       (!hasTimeRemaining || shouldYieldToHost())
@@ -223,12 +226,12 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
       break;
     }
     // $FlowFixMe[incompatible-use] found when upgrading Flow
-    const callback = currentTask.callback;
+    const callback = currentTask.callback; // 获取回调函数
     if (typeof callback === 'function') {
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       currentTask.callback = null;
       // $FlowFixMe[incompatible-use] found when upgrading Flow
-      currentPriorityLevel = currentTask.priorityLevel;
+      currentPriorityLevel = currentTask.priorityLevel; // 获取优先级,并赋值到当前作用域中
       // $FlowFixMe[incompatible-use] found when upgrading Flow
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
       if (enableProfiling) {
@@ -236,11 +239,12 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
         markTaskRun(currentTask, currentTime);
       }
       // 执行callback并获取callback得返回值
-      const continuationCallback = callback(didUserCallbackTimeout);
+      const continuationCallback = callback(didUserCallbackTimeout); // // 这是传了一个过期时间是否大于当前时间的
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
         // If a continuation is returned, immediately yield to the main thread
         // regardless of how much time is left in the current time slice.
+        // 如果返回了一个continuation，不管当前时间片还剩多少时间，立即向主线程让步。
         // $FlowFixMe[incompatible-use] found when upgrading Flow
         currentTask.callback = continuationCallback;
         if (enableProfiling) {
@@ -258,6 +262,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
           currentTask.isQueued = false;
         }
         if (currentTask === peek(taskQueue)) {
+          // 这个任务执行完成了，
           pop(taskQueue);
         }
         advanceTimers(currentTime);
@@ -346,9 +351,9 @@ function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
 }
 
 function unstable_scheduleCallback(
-  priorityLevel: PriorityLevel,
-  callback: Callback,
-  options?: {delay: number},
+  priorityLevel: PriorityLevel, // 优先级
+  callback: Callback, // 回调函数
+  options?: {delay: number}, // 配置
 ): Task {
   var currentTime = getCurrentTime();
 
@@ -403,6 +408,7 @@ function unstable_scheduleCallback(
     // This is a delayed task.
     newTask.sortIndex = startTime;
     push(timerQueue, newTask);
+    // 查看正在执行的任务列表中是否有任务
     if (peek(taskQueue) === null && newTask === peek(timerQueue)) {
       // All tasks are delayed, and this is the task with the earliest delay.
       if (isHostTimeoutScheduled) {
@@ -480,15 +486,16 @@ let taskTimeoutID: TimeoutID = (-1: any);
 // thread, like user events. By default, it yields multiple times per frame.
 // It does not attempt to align with frame boundaries, since most tasks don't
 // need to be frame aligned; for those that do, use requestAnimationFrame.
-let frameInterval = frameYieldMs;
-const continuousInputInterval = continuousYieldMs;
+let frameInterval = frameYieldMs; // 5ms
+const continuousInputInterval = continuousYieldMs; // 50ms
 const maxInterval = maxYieldMs;
 let startTime = -1;
 
 let needsPaint = false;
 
+// 判断是否应该让出线程
 function shouldYieldToHost(): boolean {
-  const timeElapsed = getCurrentTime() - startTime;
+  const timeElapsed = getCurrentTime() - startTime; // 函数执行了多少时间
   if (timeElapsed < frameInterval) {
     // The main thread has only been blocked for a really short amount of time;
     // smaller than a single frame. Don't yield yet.
@@ -503,7 +510,9 @@ function shouldYieldToHost(): boolean {
   // eventually yield regardless, since there could be a pending paint that
   // wasn't accompanied by a call to `requestPaint`, or other main thread tasks
   // like network events.
+  // （有道翻译）主线程阻塞了一段不可忽略的时间。我们可能希望放弃对主线程的控制，这样浏览器就可以执行高优先级的任务。主要的是绘画和用户输入。如果有待处理的油漆或待处理的输入，那么我们应该让步。但如果两者都不是，那么我们可以在保持反应的同时减少屈服的次数。不管怎样，我们最终都会屈服，因为可能有一个挂起的paint没有伴随着对requestPaint的调用，或者其他主线程任务，比如网络事件。
   if (enableIsInputPending) {
+    // 通过调用requestPaint修改needsPaint的值
     if (needsPaint) {
       // There's a pending paint (signaled by `requestPaint`). Yield now.
       return true;

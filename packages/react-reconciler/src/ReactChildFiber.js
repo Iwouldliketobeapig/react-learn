@@ -387,12 +387,14 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return newFiber;
   }
 
+  // 升级文本节点
   function updateTextNode(
     returnFiber: Fiber,
     current: Fiber | null,
     textContent: string,
     lanes: Lanes,
   ) {
+    // 当前节点为null或者当前节点不是文本类型
     if (current === null || current.tag !== HostText) {
       // Insert
       const created = createFiberFromText(textContent, returnFiber.mode, lanes);
@@ -755,6 +757,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return knownKeys;
   }
 
+  // 处理有多个子元素的情况
   function reconcileChildrenArray(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
@@ -792,23 +795,26 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
 
-    let oldFiber = currentFirstChild;
-    let lastPlacedIndex = 0;
-    let newIdx = 0;
+    let oldFiber = currentFirstChild; // 当前的fiber
+    let lastPlacedIndex = 0; // 作为基准位置来判断旧节点是否需要移动
+    let newIdx = 0; // 新fiber在数组中的位置
     let nextOldFiber = null;
+    // 第一次循环
     for (; oldFiber !== null && newIdx < newChildren.length; newIdx++) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
         oldFiber = null;
       } else {
-        nextOldFiber = oldFiber.sibling;
+        nextOldFiber = oldFiber.sibling; // 获取下一个弟弟fiber
       }
+      // 生成新得fiber节点
       const newFiber = updateSlot(
         returnFiber,
         oldFiber,
         newChildren[newIdx],
         lanes,
       );
+      // 如果newFiber为空跳出本次循环
       if (newFiber === null) {
         // TODO: This breaks on empty slots like null children. That's
         // unfortunate because it triggers the slow path all the time. We need
@@ -1264,11 +1270,12 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   // This API will tag the children with the side-effect of the reconciliation
   // itself. They will be added to the side-effect list as we pass through the
   // children and the parent.
+  // diff算法入口
   function reconcileChildFibers(
-    returnFiber: Fiber,
-    currentFirstChild: Fiber | null,
-    newChild: any,
-    lanes: Lanes,
+    returnFiber: Fiber, // 父组件
+    currentFirstChild: Fiber | null, // 第一个儿子
+    newChild: any, // 新的生成的组件
+    lanes: Lanes, // 优先级
   ): Fiber | null {
     // This function is not recursive.
     // If the top level item is an array, we treat it as a set of children,
@@ -1320,6 +1327,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
           );
       }
 
+      // 如果有多个子元素
       if (isArray(newChild)) {
         return reconcileChildrenArray(
           returnFiber,
