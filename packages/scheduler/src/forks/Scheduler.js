@@ -124,7 +124,7 @@ const isInputPending =
 
 const continuousOptions = {includeContinuous: enableIsInputPendingContinuous};
 
-// 将timerQueue中的过期任务推送到taskQueue中
+// 将timerQueue中的到期任务推送到taskQueue中
 function advanceTimers(currentTime: number) {
   // Check for tasks that are no longer delayed and add them to the queue. 检查不再延迟的任务并将其添加到队列中。
   let timer = peek(timerQueue);
@@ -161,6 +161,7 @@ function handleTimeout(currentTime: number) {
     } else {
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
+        // 用堆顶的任务时间来设置延迟任务
         requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
       }
     }
@@ -245,7 +246,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
         markTaskRun(currentTask, currentTime);
       }
       // 执行callback并获取callback得返回值
-      const continuationCallback = callback(didUserCallbackTimeout); // // 这是传了一个过期时间是否大于当前时间的
+      const continuationCallback = callback(didUserCallbackTimeout); // // 这里传了一个过期时间是否大于当前时间的
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
         // If a continuation is returned, immediately yield to the main thread
@@ -268,7 +269,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
           currentTask.isQueued = false;
         }
         if (currentTask === peek(taskQueue)) {
-          // 这个任务执行完成了，
+          // 这个任务执行完成了，给他从小顶堆里面干出来
           pop(taskQueue);
         }
         advanceTimers(currentTime);
@@ -279,10 +280,12 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
     currentTask = peek(taskQueue);
   }
   // Return whether there's additional work
+  // 如果taskQueue没有执行完返回true
   if (currentTask !== null) {
     return true;
   } else {
     const firstTimer = peek(timerQueue);
+    // 获取timerQueue堆顶任务，然后去处理接下来得任务
     if (firstTimer !== null) {
       requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
     }
@@ -480,7 +483,7 @@ function unstable_cancelCallback(task: Task) {
 function unstable_getCurrentPriorityLevel(): PriorityLevel {
   return currentPriorityLevel;
 }
-// 
+// 是否正在调用立即执行函数
 let isMessageLoopRunning = false;
 // 主任务函数
 let scheduledHostCallback:
@@ -495,7 +498,7 @@ let taskTimeoutID: TimeoutID = (-1: any);
 // thread, like user events. By default, it yields multiple times per frame.
 // It does not attempt to align with frame boundaries, since most tasks don't
 // need to be frame aligned; for those that do, use requestAnimationFrame.
-let frameInterval = frameYieldMs; // 5ms
+let frameInterval = frameYieldMs; // 一个可运行的最大时长
 const continuousInputInterval = continuousYieldMs; // 50ms
 const maxInterval = maxYieldMs;
 let startTime = -1;
@@ -619,6 +622,7 @@ const performWorkUntilDeadline = () => {
 };
 
 let schedulePerformWorkUntilDeadline;
+// 依次检测当前环境是否支持setImmediate -> MessageChannel最后setTimeout兜底
 if (typeof localSetImmediate === 'function') {
   // Node.js and old IE.
   // There's a few reasons for why we prefer setImmediate.
