@@ -101,9 +101,9 @@ var currentPriorityLevel = NormalPriority;
 // This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
 
-// TAG 这玩意又是用来干啥子的
+// TAG 主任务正在计划执行中
 var isHostCallbackScheduled = false;
-// TAG 这玩意是用来干啥子
+// TAG 异步任务正在计划执行中
 var isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
@@ -260,6 +260,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
         }
         // 再一次得调用advanceTimers
         advanceTimers(currentTime);
+        // 如果当前任务返回一个函数说明当前任务有后续任务，则返回true
         return true;
       } else {
         if (enableProfiling) {
@@ -568,6 +569,7 @@ function requestPaint() {
   // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
+// 计算并设置浏览器的渲染频率时间，如果不在范围内，设置默认时间为5ms
 function forceFrameRate(fps: number) {
   if (fps < 0 || fps > 125) {
     // Using console['error'] to evade Babel and ESLint
@@ -585,6 +587,7 @@ function forceFrameRate(fps: number) {
   }
 }
 
+// 调用当前上下文中的任务
 const performWorkUntilDeadline = () => {
   if (scheduledHostCallback !== null) {
     const currentTime = getCurrentTime();
@@ -604,6 +607,7 @@ const performWorkUntilDeadline = () => {
       // $FlowFixMe[not-a-function] found when upgrading Flow
       hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
     } finally {
+      // 如果还有任务就继续执行schedulePerformWorkUntilDeadline,可以理解为在两次宏任务期间去渲染一次，然后继续回来执行任务
       if (hasMoreWork) {
         // If there's more work, schedule the next message event at the end
         // of the preceding one.
