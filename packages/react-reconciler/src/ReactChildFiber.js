@@ -299,6 +299,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     }
   }
 
+  // 用来删除节点
   function deleteRemainingChildren(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
@@ -339,6 +340,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return existingChildren;
   }
 
+  // 
   function useFiber(fiber: Fiber, pendingProps: mixed): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
@@ -1165,6 +1167,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
+      // 首先判断key是否相同
       if (child.key === key) {
         const elementType = element.type;
         if (elementType === REACT_FRAGMENT_TYPE) {
@@ -1194,9 +1197,9 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
               elementType.$$typeof === REACT_LAZY_TYPE &&
               resolveLazy(elementType) === child.type)
           ) {
-            deleteRemainingChildren(returnFiber, child.sibling);
-            const existing = useFiber(child, element.props);
-            existing.ref = coerceRef(returnFiber, child, element);
+            deleteRemainingChildren(returnFiber, child.sibling); // 因为是单节点所以给兄弟元素删除了，不用做深入得对比
+            const existing = useFiber(child, element.props); // 赋值alternate
+            existing.ref = coerceRef(returnFiber, child, element); // 处理ref
             existing.return = returnFiber;
             if (__DEV__) {
               existing._debugSource = element._source;
@@ -1205,7 +1208,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
             return existing;
           }
         }
-        // Didn't match.
+        // Didn't match. 类型不同，直接干掉
         deleteRemainingChildren(returnFiber, child);
         break;
       } else {
@@ -1273,7 +1276,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   // diff算法入口
   function reconcileChildFibers(
     returnFiber: Fiber, // 父组件
-    currentFirstChild: Fiber | null, // 第一个儿子
+    currentFirstChild: Fiber | null, // current树下的Fiber节点
     newChild: any, // 新的生成的组件
     lanes: Lanes, // 优先级
   ): Fiber | null {
@@ -1285,6 +1288,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
+    // 判断是不是顶层的Fragment
     const isUnkeyedTopLevelFragment =
       typeof newChild === 'object' &&
       newChild !== null &&

@@ -325,6 +325,7 @@ export function reconcileChildren(
     // won't update its child set by applying minimal side-effects. Instead,
     // we will add them all to the child before it gets rendered. That means
     // we can optimize this reconciliation pass by not tracking side-effects.
+    // 这个相当于是一个新组件
     workInProgress.child = mountChildFibers(
       workInProgress,
       null,

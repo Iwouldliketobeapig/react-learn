@@ -341,6 +341,7 @@ export function listenToNativeEvent(
 
   let eventSystemFlags = 0;
   if (isCapturePhaseListener) {
+    // IS_CAPTURE_PHASE 1 << 2
     eventSystemFlags |= IS_CAPTURE_PHASE;
   }
   addTrappedEventListener(
@@ -542,6 +543,7 @@ export function dispatchEventForPluginEventSystem(
   targetContainer: EventTarget,
 ): void {
   let ancestorInst = targetInst;
+  // 非托管事件和非委托事件
   if (
     (eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE) === 0 &&
     (eventSystemFlags & IS_NON_DELEGATED) === 0

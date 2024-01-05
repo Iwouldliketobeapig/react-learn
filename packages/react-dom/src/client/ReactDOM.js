@@ -106,7 +106,7 @@ if (__DEV__) {
 setRestoreImplementation(restoreControlledState);
 // 设置ReactDOMUpdateBatching的内部函数
 setBatchingImplementation(
-  batchedUpdates,
+  batchedUpdates, // batchedUpdatesImpl
   discreteUpdates,
   flushSyncWithoutWarningIfAlreadyRendering,
 );

@@ -84,11 +84,13 @@ export function createEventListenerWrapper(
   );
 }
 
+// 返回不同的事件监听器
 export function createEventListenerWrapperWithPriority(
   targetContainer: EventTarget,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
 ): Function {
+  // 获取事件的优先级
   const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
@@ -103,6 +105,7 @@ export function createEventListenerWrapperWithPriority(
       listenerWrapper = dispatchEvent;
       break;
   }
+  // 根据事件优先级返回不同的事件
   return listenerWrapper.bind(
     null,
     domEventName,
@@ -122,6 +125,7 @@ function dispatchDiscreteEvent(
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = null;
   try {
+    // DiscreteEventPriority = SyncLane
     setCurrentUpdatePriority(DiscreteEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {

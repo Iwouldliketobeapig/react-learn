@@ -41,6 +41,7 @@ export function registerTwoPhaseEvent(
   dependencies: Array<DOMEventName>,
 ): void {
   registerDirectEvent(registrationName, dependencies);
+  // 注册捕获阶段事件
   registerDirectEvent(registrationName + 'Capture', dependencies);
 }
 

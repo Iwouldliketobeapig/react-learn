@@ -116,6 +116,7 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 
+// 事件绑定
 export function registerSimpleEvents() {
   for (let i = 0; i < simpleEventPluginEvents.length; i++) {
     const eventName = ((simpleEventPluginEvents[i]: any): string);
