@@ -282,6 +282,7 @@ function dispatchEventsForPlugins(
 ): void {
   const nativeEventTarget = getEventTarget(nativeEvent);
   const dispatchQueue: DispatchQueue = [];
+  // 收集事件队列
   extractEvents(
     dispatchQueue,
     domEventName,
@@ -664,6 +665,16 @@ function createDispatchListener(
   };
 }
 
+/**
+ * 
+ * @param {FiberNode} targetFiber 触发事件的Fiber 
+ * @param {*} reactName react中叫的事件名称比如onclick -> onClick
+ * @param {*} nativeEventType 
+ * @param {*} inCapturePhase 是否在捕获阶段
+ * @param {*} accumulateTargetOnly // 
+ * @param {*} nativeEvent 冒泡阶段且事件为scroll
+ * @returns 
+ */
 export function accumulateSinglePhaseListeners(
   targetFiber: Fiber | null,
   reactName: string | null,
@@ -674,13 +685,16 @@ export function accumulateSinglePhaseListeners(
 ): Array<DispatchListener> {
   const captureName = reactName !== null ? reactName + 'Capture' : null;
   const reactEventName = inCapturePhase ? captureName : reactName;
+   // 用来保存事件监听器
   let listeners: Array<DispatchListener> = [];
 
   let instance = targetFiber;
   let lastHostComponent = null;
 
   // Accumulate all instances and listeners via the target -> root path.
+  // 向上查找Fiber节点上对应的reactEventName事件
   while (instance !== null) {
+    // 获取组件和标签属性
     const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (
@@ -716,9 +730,13 @@ export function accumulateSinglePhaseListeners(
 
       // Standard React on* listeners, i.e. onClick or onClickCapture
       if (reactEventName !== null) {
+        // 获取Fiber节点上的reactEventName对应的事件
         const listener = getListener(instance, reactEventName);
         if (listener != null) {
           listeners.push(
+            /**
+             * 生成一个
+             */
             createDispatchListener(instance, listener, lastHostComponent),
           );
         }

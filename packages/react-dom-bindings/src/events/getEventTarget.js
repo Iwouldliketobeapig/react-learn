@@ -17,6 +17,7 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
 function getEventTarget(nativeEvent) {
   // Fallback to nativeEvent.srcElement for IE9
   // https://github.com/facebook/react/issues/12506
+  // 获取原生标签
   let target = nativeEvent.target || nativeEvent.srcElement || window;
 
   // Normalize SVG <use> element events #4963

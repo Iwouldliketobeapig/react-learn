@@ -368,7 +368,9 @@ export function findInstanceBlockingEvent(
 
   return_targetInst = null;
 
+  // 返回事件触发的标签
   const nativeEventTarget = getEventTarget(nativeEvent);
+  // 找到对应的Fiber节点
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
   if (targetInst !== null) {
