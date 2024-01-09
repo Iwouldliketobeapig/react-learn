@@ -238,9 +238,11 @@ function processDispatchQueueItemsInOrder(
   inCapturePhase: boolean,
 ): void {
   let previousInstance;
+  // 如果是捕获相应的事件，就到过来执行，否则就正着执行
   if (inCapturePhase) {
     for (let i = dispatchListeners.length - 1; i >= 0; i--) {
       const {instance, currentTarget, listener} = dispatchListeners[i];
+      // 如果事件调用了合成事件的stopPropagation就停止执行下去
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }
@@ -250,6 +252,7 @@ function processDispatchQueueItemsInOrder(
   } else {
     for (let i = 0; i < dispatchListeners.length; i++) {
       const {instance, currentTarget, listener} = dispatchListeners[i];
+      // 如果事件调用了合成事件的stopPropagation就停止执行下去
       if (instance !== previousInstance && event.isPropagationStopped()) {
         return;
       }

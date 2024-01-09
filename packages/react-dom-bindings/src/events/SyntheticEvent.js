@@ -28,6 +28,7 @@ function functionThatReturnsFalse() {
 
 // This is intentionally a factory so that we have different returned constructors.
 // If we had a single constructor, it would be megamorphic and engines would deopt.
+// 生成合成事件
 function createSyntheticEvent(Interface: EventInterfaceType) {
   /**
    * Synthetic events are dispatched by event plugins, typically in response to a
@@ -83,6 +84,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
   assign(SyntheticBaseEvent.prototype, {
+    // 添加preventDefault，处理浏览器兼容性问题
     preventDefault: function() {
       this.defaultPrevented = true;
       const event = this.nativeEvent;
@@ -99,6 +101,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
       this.isDefaultPrevented = functionThatReturnsTrue;
     },
 
+    // 添加preventDefault，处理浏览器兼容性问题
     stopPropagation: function() {
       const event = this.nativeEvent;
       if (!event) {
