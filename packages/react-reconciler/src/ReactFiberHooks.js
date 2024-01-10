@@ -471,6 +471,7 @@ export function renderWithHooks<Props, SecondArg>(
       ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
     }
   } else {
+    // 可以看到react把hooks分成了两种情况，第一种是mount，第二种事update
     ReactCurrentDispatcher.current =
       current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
@@ -816,6 +817,7 @@ export function resetHooksOnUnwind(): void {
 }
 
 function mountWorkInProgressHook(): Hook {
+  // 是一个链表结构，next用来储存下一个hook
   const hook: Hook = {
     memoizedState: null,
 
@@ -826,10 +828,13 @@ function mountWorkInProgressHook(): Hook {
     next: null,
   };
 
+  // 如果当前没有hook，则当前为第一个hook,设置workInProgressHook
   if (workInProgressHook === null) {
     // This is the first hook in the list
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
+    // 不是第一个就将当前hook绑定到上一个hook的next
+    // LEARN 这里为啥workInProgressHook = workInProgressHook.next呀;
     // Append to the end of the list
     workInProgressHook = workInProgressHook.next = hook;
   }
@@ -1811,16 +1816,20 @@ function forceStoreRerender(fiber) {
 function mountState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
+  // 创建或者链接hooks链
   const hook = mountWorkInProgressHook();
+  // 如果默认是是函数执行函数获取默认值
   if (typeof initialState === 'function') {
     // $FlowFixMe: Flow doesn't like mixed types
     initialState = initialState();
   }
+  // 默认值挂载到mmemoizeState和baseState上
   hook.memoizedState = hook.baseState = initialState;
+  // LEARN 这玩意又是用来存什么得
   const queue: UpdateQueue<S, BasicStateAction<S>> = {
     pending: null,
     lanes: NoLanes,
-    dispatch: null,
+    dispatch: null, // 储dispatch
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
   };
@@ -2601,6 +2610,7 @@ function dispatchReducerAction<S, A>(
   markUpdateInDevTools(fiber, lane, action);
 }
 
+// LEARN dispatchSetState
 function dispatchSetState<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -2616,7 +2626,7 @@ function dispatchSetState<S, A>(
     }
   }
 
-  const lane = requestUpdateLane(fiber); // 获取lane
+  const lane = requestUpdateLane(fiber); // 获取跑道
 
   const update: Update<S, A> = {
     lane,
@@ -2626,8 +2636,8 @@ function dispatchSetState<S, A>(
     next: (null: any),
   };
   
+  // 当前Fiber节点是否为workInProgress Fiber节点
   if (isRenderPhaseUpdate(fiber)) {
-    // 当前正在被渲染
     enqueueRenderPhaseUpdate(queue, update);
   } else {
     const alternate = fiber.alternate;
@@ -2685,7 +2695,7 @@ function dispatchSetState<S, A>(
 }
 
 function isRenderPhaseUpdate(fiber: Fiber): boolean {
-  const alternate = fiber.alternate;
+  const alternate = fiber.alternate; // 获取当前Fiber上一次渲染得Fiber
   return (
     fiber === currentlyRenderingFiber ||
     (alternate !== null && alternate === currentlyRenderingFiber)
