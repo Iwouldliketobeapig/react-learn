@@ -26,7 +26,7 @@ export function peek<T: Node>(heap: Heap<T>): T | null {
   return heap.length === 0 ? null : heap[0];
 }
 
-// 重新排序小顶堆
+// 获取堆顶并重新排序小顶堆
 export function pop<T: Node>(heap: Heap<T>): T | null {
   if (heap.length === 0) {
     return null;

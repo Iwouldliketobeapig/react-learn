@@ -1026,6 +1026,8 @@ function useMemoCache(size: number): Array<any> {
   return data;
 }
 
+// 这是跟useState的另外一种用法相关，如果传入setState传入的是一个函数那么函数里面可以拿到上一次state，
+// 并把返回值当成state；如果是其他类型的数据就直接作为state
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   // $FlowFixMe: Flow doesn't like mixed types
   return typeof action === 'function' ? action(state) : action;
@@ -1061,7 +1063,7 @@ function mountReducer<S, I, A>(
 }
 
 function updateReducer<S, I, A>(
-  reducer: (S, A) => S,
+  reducer: (S, A) => S, // updateState传过来是basicStateReducer
   initialArg: I,
   init?: I => S,
 ): [S, Dispatch<A>] {
@@ -1076,12 +1078,13 @@ function updateReducer<S, I, A>(
 
   queue.lastRenderedReducer = reducer;
 
+  // 获取当前渲染的hoook
   const current: Hook = (currentHook: any);
 
-  // The last rebase update that is NOT part of the base state.
+  // The last rebase update that is NOT part of the base state.(最后一个尚未处理的挂起更新)
   let baseQueue = current.baseQueue;
 
-  // The last pending update that hasn't been processed yet.
+  // The last pending update that hasn't been processed yet.(最后一个尚未处理的挂起更新)
   const pendingQueue = queue.pending;
   if (pendingQueue !== null) {
     // We have new updates that haven't been processed yet.
@@ -1109,13 +1112,14 @@ function updateReducer<S, I, A>(
 
   if (baseQueue !== null) {
     // We have a queue to process.
-    const first = baseQueue.next;
+    const first = baseQueue.next; // 这里拿的是第一个
     let newState = current.baseState;
 
     let newBaseState = null;
     let newBaseQueueFirst = null;
     let newBaseQueueLast = null;
     let update = first;
+    // 一直递归拿到最进的一个提交
     do {
       // An extra OffscreenLane bit is added to updates that were made to
       // a hidden tree, so that we can distinguish them from updates that were
@@ -1186,7 +1190,7 @@ function updateReducer<S, I, A>(
         }
       }
       update = update.next;
-    } while (update !== null && update !== first);
+    } while (update !== null && update !== first); 
 
     if (newBaseQueueLast === null) {
       newBaseState = newState;
@@ -1827,19 +1831,19 @@ function mountState<S>(
   hook.memoizedState = hook.baseState = initialState;
   // LEARN 这玩意又是用来存什么得
   const queue: UpdateQueue<S, BasicStateAction<S>> = {
-    pending: null,
-    lanes: NoLanes,
+    pending: null, // 用来存即将更新的queue
+    lanes: NoLanes, // 跑道
     dispatch: null, // 储dispatch
-    lastRenderedReducer: basicStateReducer,
-    lastRenderedState: (initialState: any),
+    lastRenderedReducer: basicStateReducer, // basicStateReDucer传入state和action,如果action是函数就返回action(state)否则返回state
+    lastRenderedState: (initialState: any), // 上一次渲染的内容
   };
   hook.queue = queue;
   const dispatch: Dispatch<
     BasicStateAction<S>,
   > = (queue.dispatch = (dispatchSetState.bind(
     null,
-    currentlyRenderingFiber,
-    queue,
+    currentlyRenderingFiber, // 绑定当前渲染节点
+    queue, // 绑定queue
   ): any));
   return [hook.memoizedState, dispatch];
 }
@@ -1847,6 +1851,7 @@ function mountState<S>(
 function updateState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
+  // 直接复用了updateReducer;
   return updateReducer(basicStateReducer, (initialState: any));
 }
 
@@ -2586,7 +2591,7 @@ function dispatchReducerAction<S, A>(
     }
   }
 
-  const lane = requestUpdateLane(fiber);
+  const lane = requestUpdateLane(fiber); // 返回优先级lane
 
   const update: Update<S, A> = {
     lane,
@@ -2614,7 +2619,7 @@ function dispatchReducerAction<S, A>(
 function dispatchSetState<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
-  action: A,
+  action: A, // 调用传入的state
 ): void {
   if (__DEV__) {
     if (typeof arguments[3] === 'function') {
@@ -2656,20 +2661,22 @@ function dispatchSetState<S, A>(
           ReactCurrentDispatcher.current = InvalidNestedHooksDispatcherOnUpdateInDEV;
         }
         try {
-          const currentState: S = (queue.lastRenderedState: any);
-          const eagerState = lastRenderedReducer(currentState, action);
+          const currentState: S = (queue.lastRenderedState: any); // 获取上一次渲染的state
+          const eagerState = lastRenderedReducer(currentState, action); // 最新的state
           // Stash the eagerly computed state, and the reducer used to compute
           // it, on the update object. If the reducer hasn't changed by the
           // time we enter the render phase, then the eager state can be used
           // without calling the reducer again.
           update.hasEagerState = true;
           update.eagerState = eagerState;
+          // 判断本次更新的state跟上次跟新的states是否相等
           if (is(eagerState, currentState)) {
             // Fast path. We can bail out without scheduling React to re-render.
             // It's still possible that we'll need to rebase this update later,
             // if the component re-renders for a different reason and by that
             // time the reducer has changed.
             // TODO: Do we still need to entangle transitions in this case?
+            // 如果相等执行这个，并返回？
             enqueueConcurrentHookUpdateAndEagerlyBailout(fiber, queue, update);
             return;
           }
@@ -2683,9 +2690,13 @@ function dispatchSetState<S, A>(
       }
     }
 
+    // 获取root Fiber节点
+    // 将queue和update推到并发队列中
     const root = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
     if (root !== null) {
+      // 返回一个执行时间
       const eventTime = requestEventTime();
+      // 去做任务调度了
       scheduleUpdateOnFiber(root, fiber, lane, eventTime);
       entangleTransitionUpdate(root, queue, lane);
     }

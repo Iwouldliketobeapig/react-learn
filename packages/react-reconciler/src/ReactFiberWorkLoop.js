@@ -308,11 +308,12 @@ const RootSuspendedWithDelay = 4;
 const RootCompleted = 5;
 const RootDidNotComplete = 6;
 
-// Describes where we are in the React execution stack
+// Describes where we are in the React execution stack（描述我们在React执行堆栈中的阶段）
 let executionContext: ExecutionContext = NoContext;
 // The root we're working on
 let workInProgressRoot: FiberRoot | null = null;
-// The fiber we're working on
+// 正在被处理的的fiber节点
+// The fiber we're working on 
 let workInProgress: Fiber | null = null;
 // The lanes we're rendering
 let workInProgressRootRenderLanes: Lanes = NoLanes;
@@ -697,6 +698,7 @@ function requestRetryLane(fiber: Fiber) {
   return claimNextRetryLane();
 }
 
+// LEARN scheduleUpdateOnFiber
 export function scheduleUpdateOnFiber(
   root: FiberRoot,
   fiber: Fiber,
@@ -727,7 +729,7 @@ export function scheduleUpdateOnFiber(
     markRootSuspended(root, workInProgressRootRenderLanes);
   }
 
-  // Mark that the root has a pending update.
+  // Mark that the root has a pending update. 标记更新
   markRootUpdated(root, lane, eventTime);
 
   if (
@@ -748,7 +750,7 @@ export function scheduleUpdateOnFiber(
     );
   } else {
     // This is a normal update, scheduled from outside the render phase. For
-    // example, during an input event.
+    // example, during an input event. 这是一个正常的更新，从渲染阶段之外安排。例如，在输入事件期间。
     if (enableUpdaterTracking) {
       if (isDevToolsPresent) {
         addFiberToLanesMap(root, fiber, lane);

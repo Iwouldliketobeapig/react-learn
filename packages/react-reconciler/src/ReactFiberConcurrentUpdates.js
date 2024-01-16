@@ -99,6 +99,7 @@ function enqueueUpdate(
   concurrentQueues[concurrentQueuesIndex++] = update;
   concurrentQueues[concurrentQueuesIndex++] = lane;
 
+  // 合并并发更新的一个lans
   concurrentlyUpdatedLanes = mergeLanes(concurrentlyUpdatedLanes, lane);
 
   // The fiber's `lane` field is used in some places to check if any work is

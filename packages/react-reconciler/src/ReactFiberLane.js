@@ -33,9 +33,11 @@ import {clz32} from './clz32';
 
 export const TotalLanes = 31;
 
+// 没有优先级
 export const NoLanes: Lanes = /*                        */ 0b0000000000000000000000000000000;
 export const NoLane: Lane = /*                          */ 0b0000000000000000000000000000000;
 
+// 同步优先级
 export const SyncHydrationLane: Lane = /*               */ 0b0000000000000000000000000000001;
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000010;
 
