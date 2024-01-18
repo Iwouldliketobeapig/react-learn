@@ -220,7 +220,7 @@ type Dispatch<A> = A => void;
 // These are set right before calling the component.
 let renderLanes: Lanes = NoLanes;
 // The work-in-progress fiber. I've named it differently to distinguish it from
-// the work-in-progress hook.
+// the work-in-progress hook. workInProgress 当前渲染得Fiber
 let currentlyRenderingFiber: Fiber = (null: any);
 
 // Hooks are stored as a linked list on the fiber's memoizedState field. The
@@ -834,13 +834,13 @@ function mountWorkInProgressHook(): Hook {
     currentlyRenderingFiber.memoizedState = workInProgressHook = hook;
   } else {
     // 不是第一个就将当前hook绑定到上一个hook的next
-    // LEARN 这里为啥workInProgressHook = workInProgressHook.next呀;
     // Append to the end of the list
     workInProgressHook = workInProgressHook.next = hook;
   }
   return workInProgressHook;
 }
 
+// LEARN updateWorkInProgressHook
 function updateWorkInProgressHook(): Hook {
   // This function is used both for updates and for re-renders triggered by a
   // render phase update. It assumes there is either a current hook we can
@@ -851,6 +851,7 @@ function updateWorkInProgressHook(): Hook {
   if (currentHook === null) {
     const current = currentlyRenderingFiber.alternate;
     if (current !== null) {
+      // 获取alternate上fiber上储存得hook
       nextCurrentHook = current.memoizedState;
     } else {
       nextCurrentHook = null;
@@ -860,6 +861,7 @@ function updateWorkInProgressHook(): Hook {
   }
 
   let nextWorkInProgressHook: null | Hook;
+  // 获取当前得hook
   if (workInProgressHook === null) {
     nextWorkInProgressHook = currentlyRenderingFiber.memoizedState;
   } else {
@@ -877,6 +879,7 @@ function updateWorkInProgressHook(): Hook {
 
     if (nextCurrentHook === null) {
       const currentFiber = currentlyRenderingFiber.alternate;
+      // 这是一个初始化得渲染
       if (currentFiber === null) {
         // This is the initial render. This branch is reached when the component
         // suspends, resumes, then renders an additional hook.
@@ -891,6 +894,7 @@ function updateWorkInProgressHook(): Hook {
         };
         nextCurrentHook = newHook;
       } else {
+        // 这就是说明上一次渲染跟这一次渲染得hook对应不上
         // This is an update. We should always have a current hook.
         throw new Error('Rendered more hooks than during the previous render.');
       }
@@ -898,6 +902,7 @@ function updateWorkInProgressHook(): Hook {
 
     currentHook = nextCurrentHook;
 
+    // 生成新的hook
     const newHook: Hook = {
       memoizedState: currentHook.memoizedState,
 
@@ -908,6 +913,7 @@ function updateWorkInProgressHook(): Hook {
       next: null,
     };
 
+    // 绑定到workInProgress上，并形成一个链表
     if (workInProgressHook === null) {
       // This is the first hook in the list.
       currentlyRenderingFiber.memoizedState = workInProgressHook = newHook;
@@ -1067,6 +1073,7 @@ function updateReducer<S, I, A>(
   initialArg: I,
   init?: I => S,
 ): [S, Dispatch<A>] {
+  // 获取对应得hook
   const hook = updateWorkInProgressHook();
   const queue = hook.queue;
 
@@ -1875,6 +1882,7 @@ function pushEffect(
     // Circular
     next: (null: any),
   };
+  // 获取当前组件的updateQueue
   let componentUpdateQueue: null | FunctionComponentUpdateQueue = (currentlyRenderingFiber.updateQueue: any);
   if (componentUpdateQueue === null) {
     componentUpdateQueue = createFunctionComponentUpdateQueue();
@@ -1985,15 +1993,19 @@ function updateRef<T>(initialValue: T): {current: T} {
   return hook.memoizedState;
 }
 
+// LEARN mountEffectImpl
 function mountEffectImpl(
   fiberFlags: Flags,
   hookFlags: HookFlags,
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  // 看看存state和存effect用的是一个玩意
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
+  // 更新flags
   currentlyRenderingFiber.flags |= fiberFlags;
+  // 存在memoizedState上
   hook.memoizedState = pushEffect(
     HookHasEffect | hookFlags,
     create,
@@ -2034,6 +2046,10 @@ function updateEffectImpl(
   );
 }
 
+/**
+ * @param {function} create 执行的函数
+ * @param {any[] | void} deps 依赖 
+*/
 function mountEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
@@ -2049,6 +2065,7 @@ function mountEffect(
       deps,
     );
   } else {
+    // 调用mountEffectImpl
     mountEffectImpl(
       PassiveEffect | PassiveStaticEffect,
       HookPassive,
