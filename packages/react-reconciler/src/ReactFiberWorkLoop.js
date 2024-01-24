@@ -941,7 +941,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   if (includesSyncLane(newCallbackPriority)) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
-    // 往回调队列里面添加同步回调函数
+    // 往回调队列里面添加同步回调函数performSyncWorkOnRoot；
+    // performSyncWorkOnRoot中回去执行
     if (root.tag === LegacyRoot) {
       if (__DEV__ && ReactCurrentActQueue.isBatchingLegacy !== null) {
         ReactCurrentActQueue.didScheduleLegacyUpdate = true;
@@ -1473,6 +1474,7 @@ function markRootSuspended(root, suspendedLanes) {
 
 // This is the entry point for synchronous tasks that don't go
 // through Scheduler
+// LEARN performSyncWorkOnRoot
 function performSyncWorkOnRoot(root) {
   if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
     syncNestedUpdateFlag();
@@ -1534,6 +1536,7 @@ function performSyncWorkOnRoot(root) {
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
   root.finishedLanes = lanes;
+  // 提交更新
   commitRoot(
     root,
     workInProgressRootRecoverableErrors,
@@ -2642,6 +2645,7 @@ function commitRootImpl(
     throw new Error('Should not already be working.');
   }
 
+  // 获取已经完成的任务
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes;
 
@@ -2677,6 +2681,7 @@ function commitRootImpl(
       }
     }
   }
+  // 重置finishedWork
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
 
@@ -2704,6 +2709,7 @@ function commitRootImpl(
   markRootFinished(root, remainingLanes);
 
   if (root === workInProgressRoot) {
+    // 重置workInProgress
     // We can reset these now that they are finished.
     workInProgressRoot = null;
     workInProgress = null;
@@ -2820,6 +2826,7 @@ function commitRootImpl(
     if (enableSchedulingProfiler) {
       markLayoutEffectsStarted(lanes);
     }
+    // 执行layoutEffect
     commitLayoutEffects(finishedWork, root, lanes);
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -2837,6 +2844,7 @@ function commitRootImpl(
 
     // Tell Scheduler to yield at the end of the frame, so the browser has an
     // opportunity to paint.
+    // 这里去设置scheduler中的needPaint,如果scheduler中有任务，这个时候会暂停下来
     requestPaint();
 
     executionContext = prevExecutionContext;
@@ -2943,6 +2951,7 @@ function commitRootImpl(
   // TODO: We can optimize this by not scheduling the callback earlier. Since we
   // currently schedule the callback in multiple places, will wait until those
   // are consolidated.
+  // TAG 执行useEffect 
   if (includesSyncLane(pendingPassiveEffectsLanes) && root.tag !== LegacyRoot) {
     flushPassiveEffects();
   }

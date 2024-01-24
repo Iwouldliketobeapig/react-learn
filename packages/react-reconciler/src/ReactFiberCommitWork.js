@@ -618,10 +618,16 @@ function commitHookEffectListUnmount(
   }
 }
 
+/**
+ * @param {HookFlags} flags 当前的是layoutEffect还是effect
+ * @param {Fiber} finishedWork 当前提交的Fiber
+*/
 function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
+  // 从fiber节点上拿到effect链表
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
+    // 从第一个开始执行
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
     do {
@@ -634,13 +640,14 @@ function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
           }
         }
 
-        // Mount
+        // Mount 获取useEffect传入的第一个参数-函数
         const create = effect.create;
         if (__DEV__) {
           if ((flags & HookInsertion) !== NoHookEffect) {
             setIsRunningInsertionEffect(true);
           }
         }
+        // 执行create，获取函数的返回值并储存的effect上
         effect.destroy = create();
         if (__DEV__) {
           if ((flags & HookInsertion) !== NoHookEffect) {
@@ -1027,6 +1034,7 @@ function commitProfilerUpdate(finishedWork: Fiber, current: Fiber | null) {
   }
 }
 
+// 执行useLayoutEffect
 function commitLayoutEffectOnFiber(
   finishedRoot: FiberRoot,
   current: Fiber | null,
@@ -2564,6 +2572,7 @@ function commitMutationEffectsOnFiber(
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
+      // const Update = /*                       */ 0b000000000000000000000000100;
       if (flags & Update) {
         try {
           commitHookEffectListUnmount(
@@ -2572,7 +2581,7 @@ function commitMutationEffectsOnFiber(
             finishedWork.return,
           );
           commitHookEffectListMount(
-            HookInsertion | HookHasEffect,
+            HookInsertion | HookHasEffect, // 2 | 1 = 3
             finishedWork,
           );
         } catch (error) {
@@ -3003,6 +3012,7 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   }
 }
 
+// 执行commitLayoutEffectOnFiber
 export function commitLayoutEffects(
   finishedWork: Fiber,
   root: FiberRoot,

@@ -471,7 +471,7 @@ export function renderWithHooks<Props, SecondArg>(
       ReactCurrentDispatcher.current = HooksDispatcherOnMountInDEV;
     }
   } else {
-    // 可以看到react把hooks分成了两种情况，第一种是mount，第二种事update
+    // 在这里去给ReactCurrentDispatcher.current赋值的,可以看到react把hooks分成了两种情况，第一种是mount，第二种事update
     ReactCurrentDispatcher.current =
       current === null || current.memoizedState === null
         ? HooksDispatcherOnMount
@@ -510,6 +510,7 @@ export function renderWithHooks<Props, SecondArg>(
     (workInProgress.mode & StrictLegacyMode) !== NoMode;
 
   shouldDoubleInvokeUserFnsInHooksDEV = shouldDoubleRenderDEV;
+  // 执行组件并获取返回值
   let children = Component(props, secondArg);
   shouldDoubleInvokeUserFnsInHooksDEV = false;
 
@@ -1836,10 +1837,10 @@ function mountState<S>(
   }
   // 默认值挂载到mmemoizeState和baseState上
   hook.memoizedState = hook.baseState = initialState;
-  // LEARN 这玩意又是用来存什么得
+  // LEARN 这里用来储存hook默认的渲染数据；
   const queue: UpdateQueue<S, BasicStateAction<S>> = {
     pending: null, // 用来存即将更新的queue
-    lanes: NoLanes, // 跑道
+    lanes: NoLanes, // 跑道，默认是NoLanes
     dispatch: null, // 储dispatch
     lastRenderedReducer: basicStateReducer, // basicStateReDucer传入state和action,如果action是函数就返回action(state)否则返回state
     lastRenderedState: (initialState: any), // 上一次渲染的内容
@@ -1890,6 +1891,7 @@ function pushEffect(
     componentUpdateQueue.lastEffect = effect.next = effect;
   } else {
     const lastEffect = componentUpdateQueue.lastEffect;
+    // 也是作为一个环处理
     if (lastEffect === null) {
       componentUpdateQueue.lastEffect = effect.next = effect;
     } else {
@@ -2005,8 +2007,9 @@ function mountEffectImpl(
   const nextDeps = deps === undefined ? null : deps;
   // 更新flags
   currentlyRenderingFiber.flags |= fiberFlags;
-  // 存在memoizedState上
+  // 储存到memoizedState上
   hook.memoizedState = pushEffect(
+    // HookHasEffect = 0b0001,
     HookHasEffect | hookFlags,
     create,
     undefined,
@@ -2633,6 +2636,9 @@ function dispatchReducerAction<S, A>(
 }
 
 // LEARN dispatchSetState
+// 1. 生成一个update
+// 2. 将生成的update推送到并发更新中去
+// 3. 去做任务调度
 function dispatchSetState<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,

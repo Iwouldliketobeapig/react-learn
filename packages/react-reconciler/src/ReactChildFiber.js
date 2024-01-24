@@ -827,7 +827,9 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
         }
         break;
       }
+      // 如果是更新的情况
       if (shouldTrackSideEffects) {
+        // 如果有老的Fiber，但是新得Fiber没有上一次渲染，则从父元素中删除老fiber
         if (oldFiber && newFiber.alternate === null) {
           // We matched the slot, but we didn't reuse the existing fiber, so we
           // need to delete the existing child.

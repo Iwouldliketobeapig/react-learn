@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type { Fiber, FiberRoot } from './ReactInternalTypes';
 import type {
   UpdateQueue as HookQueue,
   Update as HookUpdate,
@@ -16,18 +16,18 @@ import type {
   SharedQueue as ClassQueue,
   Update as ClassUpdate,
 } from './ReactFiberClassUpdateQueue';
-import type {Lane, Lanes} from './ReactFiberLane';
-import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
+import type { Lane, Lanes } from './ReactFiberLane';
+import type { OffscreenInstance } from './ReactFiberOffscreenComponent';
 
 import {
   warnAboutUpdateOnNotYetMountedFiberInDEV,
   throwIfInfiniteUpdateLoopDetected,
   getWorkInProgressRoot,
 } from './ReactFiberWorkLoop';
-import {NoLane, NoLanes, mergeLanes, markHiddenUpdate} from './ReactFiberLane';
-import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {HostRoot, OffscreenComponent} from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberOffscreenComponent';
+import { NoLane, NoLanes, mergeLanes, markHiddenUpdate } from './ReactFiberLane';
+import { NoFlags, Placement, Hydrating } from './ReactFiberFlags';
+import { HostRoot, OffscreenComponent } from './ReactWorkTags';
+import { OffscreenVisible } from './ReactFiberOffscreenComponent';
 
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,
@@ -49,6 +49,7 @@ let concurrentlyUpdatedLanes: Lanes = NoLanes;
 
 export function finishQueueingConcurrentUpdates(): void {
   const endIndex = concurrentQueuesIndex;
+  // 每次执行的时候都将concurrentQueuesIndex设置位0；
   concurrentQueuesIndex = 0;
 
   concurrentlyUpdatedLanes = NoLanes;
@@ -186,6 +187,7 @@ export function unsafe_markUpdateLaneFromFiberToRoot(
   return root;
 }
 
+// 从更新fiber开始向上更新fiber节点的childLanes
 function markUpdateLaneFromFiberToRoot(
   sourceFiber: Fiber,
   update: ConcurrentUpdate | null,
