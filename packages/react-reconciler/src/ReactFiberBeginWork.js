@@ -1831,6 +1831,7 @@ function mountIncompleteClassComponent(
   );
 }
 
+// LEARN 学习中
 function mountIndeterminateComponent(
   _current,
   workInProgress,
@@ -1851,7 +1852,7 @@ function mountIndeterminateComponent(
   }
 
   prepareToReadContext(workInProgress, renderLanes);
-  let value;
+  let value; // 用来存JSX
   let hasId;
 
   if (enableSchedulingProfiler) {

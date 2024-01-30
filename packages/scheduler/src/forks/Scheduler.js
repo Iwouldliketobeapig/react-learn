@@ -61,6 +61,7 @@ const hasPerformanceNow =
   // $FlowFixMe[method-unbinding]
   typeof performance === 'object' && typeof performance.now === 'function';
 
+// 如果performace纯在就用performace.now,不然就用Date.now
 if (hasPerformanceNow) {
   const localPerformance = performance;
   getCurrentTime = () => localPerformance.now();

@@ -142,6 +142,7 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render = functio
       }
     }
   }
+  // 去挂载children
   updateContainer(children, root, null, null);
 };
 
@@ -169,6 +170,7 @@ ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = funct
       }
     }
     flushSync(() => {
+      // 在root上去卸载组件
       updateContainer(null, root, null, null);
     });
     unmarkContainerAsRoot(container);
@@ -179,10 +181,12 @@ export function createRoot(
   container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
 ): RootType {
+  // 判断container是否合法
   if (!isValidContainer(container)) {
     throw new Error('createRoot(...): Target container is not a DOM element.');
   }
 
+  // 一些container警告
   warnIfReactDOMContainerInDEV(container);
 
   let isStrictMode = false;
@@ -233,6 +237,7 @@ export function createRoot(
     }
   }
 
+  // 创建root fiber节点
   const root = createContainer(
     container,
     ConcurrentRoot,

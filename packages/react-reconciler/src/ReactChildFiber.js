@@ -340,11 +340,12 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return existingChildren;
   }
 
-  // 
   function useFiber(fiber: Fiber, pendingProps: mixed): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
+    // 复用节点
     const clone = createWorkInProgress(fiber, pendingProps);
+    // 文本节点一定是单节点，index一定为0，且没有兄弟节点
     clone.index = 0;
     clone.sibling = null;
     return clone;
@@ -404,6 +405,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       return created;
     } else {
       // Update
+      // 节点复用
       const existing = useFiber(current, textContent);
       existing.return = returnFiber;
       return existing;
@@ -591,6 +593,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
 
     const key = oldFiber !== null ? oldFiber.key : null;
 
+    // 处理newChilid是字符串和number的情况
     if (
       (typeof newChild === 'string' && newChild !== '') ||
       typeof newChild === 'number'
@@ -598,12 +601,15 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
+      // 按照理解，string和number是Fiber是不可能有key的，所以如果老节点有key，那么一定不能复用，直接返回
       if (key !== null) {
         return null;
       }
+      // 节点复用并返回fiber节点
       return updateTextNode(returnFiber, oldFiber, '' + newChild, lanes);
     }
 
+    // 如果key不相同则直接返回null
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
@@ -798,7 +804,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     let previousNewFiber: Fiber | null = null;
 
     let oldFiber = currentFirstChild; // 当前的fiber
-    let lastPlacedIndex = 0; // 作为基准位置来判断旧节点是否需要移动
+    let lastPlacedIndex = 0; // 用来储存当前已经处理到哪一个节点，作为基准位置来判断旧节点是否需要移动
     let newIdx = 0; // 新fiber在数组中的位置
     let nextOldFiber = null;
     // 第一次循环
@@ -807,16 +813,16 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
         nextOldFiber = oldFiber;
         oldFiber = null;
       } else {
-        nextOldFiber = oldFiber.sibling; // 获取下一个弟弟fiber
+        nextOldFiber = oldFiber.sibling; // 获取下一个兄弟fiber
       }
-      // 生成新得fiber节点
+      // 生成新得fiber节点,如果key不相同直接返回null
       const newFiber = updateSlot(
         returnFiber,
         oldFiber,
         newChildren[newIdx],
         lanes,
       );
-      // 如果newFiber为空跳出本次循环
+      // 如果newFiber为空直接跳出本次for循环
       if (newFiber === null) {
         // TODO: This breaks on empty slots like null children. That's
         // unfortunate because it triggers the slow path all the time. We need
@@ -851,6 +857,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       oldFiber = nextOldFiber;
     }
 
+    // 如果newIdx已经为最后一个，把剩余的没有处理的老fiber删除掉，并返回
     if (newIdx === newChildren.length) {
       // We've reached the end of the new children. We can delete the rest.
       deleteRemainingChildren(returnFiber, oldFiber);
@@ -861,6 +868,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       return resultingFirstChild;
     }
 
+    // 如果老的fiber节点已经处理完，还有新的child没有处理完，新增并返回
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
@@ -885,10 +893,10 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       return resultingFirstChild;
     }
 
-    // Add all children to a key map for quick lookups.
+    // Add all children to a key map for quick lookups. 以oldFiber的key或者index作为Map结构的key来储存oldFiber
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
-    // Keep scanning and use the map to restore deleted items as moves.
+    // Keep scanning and use the map to restore deleted items as moves. 经过上面的处理后，剩下的就是
     for (; newIdx < newChildren.length; newIdx++) {
       const newFiber = updateFromMap(
         existingChildren,

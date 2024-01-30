@@ -262,6 +262,7 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
   return IndeterminateComponent;
 }
 
+// 根据老节点创建新节点
 // This is used to create an alternate fiber to do work on.
 export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   let workInProgress = current.alternate;
@@ -822,6 +823,11 @@ export function createFiberFromTracingMarker(
   return fiber;
 }
 
+// 创建text类型的fiber节点
+// text的fiber类型为HostText
+// content作为pendingProps
+// key设置为null
+// mode继承父节点的mode
 export function createFiberFromText(
   content: string,
   mode: TypeOfMode,

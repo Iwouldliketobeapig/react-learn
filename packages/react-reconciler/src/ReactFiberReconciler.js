@@ -336,6 +336,7 @@ export function updateContainer(
     markRenderScheduled(lane);
   }
 
+  // 获取Context并赋值到container上
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
     container.context = context;
@@ -381,6 +382,7 @@ export function updateContainer(
 
   const root = enqueueUpdate(current, update, lane);
   if (root !== null) {
+    // 调度
     scheduleUpdateOnFiber(root, current, lane, eventTime);
     entangleTransitions(root, current, lane);
   }

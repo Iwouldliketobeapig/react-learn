@@ -568,6 +568,7 @@ function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
   }
 }
 
+// 从effect上获取destroy然后执行
 function commitHookEffectListUnmount(
   flags: HookFlags,
   finishedWork: Fiber,
@@ -2553,6 +2554,7 @@ function recursivelyTraverseMutationEffects(
   setCurrentDebugFiberInDEV(prevDebugFiber);
 }
 
+// LEARN commitMutationEffectsOnFiber
 function commitMutationEffectsOnFiber(
   finishedWork: Fiber,
   root: FiberRoot,
@@ -2994,6 +2996,7 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   // Placement effects (insertions, reorders) can be scheduled on any fiber
   // type. They needs to happen after the children effects have fired, but
   // before the effects on this fiber have fired.
+  // Placement（插入和重新排序）副作用可以发生在任何fiber类型上，但是他们需要在自身副作用发生之前被调用，在子节点副作用发生之后被调用
   const flags = finishedWork.flags;
   if (flags & Placement) {
     try {

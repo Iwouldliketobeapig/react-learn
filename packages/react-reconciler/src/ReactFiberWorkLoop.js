@@ -872,6 +872,7 @@ export function isUnsafeClassRenderPhaseUpdate(fiber: Fiber): boolean {
 // of the existing task is the same as the priority of the next level that the
 // root has work on. This function is called on every update, and right before
 // exiting a task.
+// 调度更新
 // 使用此函数为根调度任务。 每个根只有一个任务； 如果已经安排了任务，我们将检查以确保现有任务的优先级与根已处理的下一个级别的优先级相同。 这个函数在每次更新时调用和退出任务之前调用。
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackNode = root.callbackNode;
@@ -1494,6 +1495,7 @@ function performSyncWorkOnRoot(root) {
   }
 
   let exitStatus = renderRootSync(root, lanes);
+
   if (root.tag !== LegacyRoot && exitStatus === RootErrored) {
     // If something threw an error, try rendering one more time. We'll render
     // synchronously to block concurrent data mutations, and we'll includes
@@ -2739,6 +2741,7 @@ function commitRootImpl(
       // the previous render and commit if we throttle the commit
       // with setTimeout
       pendingPassiveTransitions = transitions;
+      // TAG 执行useEffect，这里可以看到用的是scheduleCallback去做的
       scheduleCallback(NormalSchedulerPriority, () => {
         flushPassiveEffects();
         // This render triggered passive effects: release the root cache pool
@@ -2800,6 +2803,7 @@ function commitRootImpl(
     }
 
     // The next phase is the mutation phase, where we mutate the host tree.
+    // 浏览器渲染
     commitMutationEffects(root, finishedWork, lanes);
 
     if (enableCreateEventHandleAPI) {
@@ -3152,7 +3156,9 @@ function flushPassiveEffectsImpl() {
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
 
+  // 先执行ummount
   commitPassiveUnmountEffects(root.current);
+  // 执行useEffect
   commitPassiveMountEffects(root, root.current, lanes, transitions);
 
   // TODO: Move to commitPassiveMountEffects
