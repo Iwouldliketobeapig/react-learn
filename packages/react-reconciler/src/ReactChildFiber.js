@@ -284,6 +284,9 @@ type ChildReconciler = (
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
+/**
+ * @param {boolean} shouldTrackSideEffects true是更新，false为初始挂载
+*/
 function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
@@ -351,6 +354,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return clone;
   }
 
+  // 这里做得事情是移动child的位置，实际上就是对比老的chilid和新的chilid的位置
   function placeChild(
     newFiber: Fiber,
     lastPlacedIndex: number,
@@ -366,11 +370,13 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     const current = newFiber.alternate;
     if (current !== null) {
       const oldIndex = current.index;
+      // 如果老节点的位置小于新节点位置，就直接使用新节点位置
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
         newFiber.flags |= Placement | PlacementDEV;
         return lastPlacedIndex;
       } else {
+        // 如果老节点的位置大于新节点位置，就返回老节点的位置
         // This item can stay in place.
         return oldIndex;
       }
@@ -765,7 +771,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return knownKeys;
   }
 
-  // 处理有多个子元素的情况
+  //LEARN 处理有多个子元素的情况
   function reconcileChildrenArray(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
@@ -800,7 +806,9 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       }
     }
 
+    // 用来存储第一个fiber节点
     let resultingFirstChild: Fiber | null = null;
+    // 用来储存上一个处理的fiber,用来储存sibling
     let previousNewFiber: Fiber | null = null;
 
     let oldFiber = currentFirstChild; // 当前的fiber
@@ -842,6 +850,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
           deleteChild(returnFiber, oldFiber);
         }
       }
+      // 对比newIdx和lastPlaceIndex,确认lastPlacedIndex
       lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
       if (previousNewFiber === null) {
         // TODO: Move out of the loop. This only happens for the first run.
@@ -877,6 +886,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
         if (newFiber === null) {
           continue;
         }
+        // 对比newIdx和lastPlaceIndex,确认lastPlacedIndex
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
         if (previousNewFiber === null) {
           // TODO: Move out of the loop. This only happens for the first run.
@@ -896,7 +906,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     // Add all children to a key map for quick lookups. 以oldFiber的key或者index作为Map结构的key来储存oldFiber
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
-    // Keep scanning and use the map to restore deleted items as moves. 经过上面的处理后，剩下的就是
+    // Keep scanning and use the map to restore deleted items as moves. 经过上面的处理后，剩下的就是可能顺序改变的情况
     for (; newIdx < newChildren.length; newIdx++) {
       const newFiber = updateFromMap(
         existingChildren,
@@ -906,6 +916,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
         lanes,
       );
       if (newFiber !== null) {
+        // 如果是更新的情况，删除这次被使用的节点
         if (shouldTrackSideEffects) {
           if (newFiber.alternate !== null) {
             // The new fiber is a work in progress, but if there exists a
@@ -917,6 +928,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
             );
           }
         }
+         // 对比newIdx和lastPlaceIndex,确认lastPlacedIndex
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
         if (previousNewFiber === null) {
           resultingFirstChild = newFiber;
@@ -927,6 +939,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       }
     }
 
+    // 更新条件下，删除所有没有被使用的老节点
     if (shouldTrackSideEffects) {
       // Any existing children that weren't consumed above were deleted. We need
       // to add them to the deletion list.
@@ -937,6 +950,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       const numberOfForks = newIdx;
       pushTreeFork(returnFiber, numberOfForks);
     }
+    // 返回第一个子节点
     return resultingFirstChild;
   }
 
