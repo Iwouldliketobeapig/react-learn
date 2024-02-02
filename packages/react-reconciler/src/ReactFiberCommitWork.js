@@ -1785,6 +1785,7 @@ function getHostSibling(fiber: Fiber): ?Instance {
   siblings: while (true) {
     // If we didn't find anything, let's try the next sibling.
     while (node.sibling === null) {
+      // 如果没有父节点，或者父节点是根节点
       if (node.return === null || isHostParent(node.return)) {
         // If we pop out of the root or hit the parent the fiber we are the
         // last sibling.
@@ -1818,7 +1819,7 @@ function getHostSibling(fiber: Fiber): ?Instance {
         node = node.child;
       }
     }
-    // Check if this host node is stable or about to be placed.
+    // Check if this host node is stable or about to be placed. 直到知道一个兄弟节点不是插入类型，返回兄弟节点对应的dom节点
     if (!(node.flags & Placement)) {
       // Found it!
       return node.stateNode;
@@ -1840,13 +1841,14 @@ function commitPlacement(finishedWork: Fiber): void {
     }
   }
   // Recursively insert all host nodes into the parent.
+  // 获取父节点
   const parentFiber = getHostParentFiber(finishedWork);
 
   switch (parentFiber.tag) {
     case HostSingleton: {
       if (enableHostSingletons && supportsSingletons) {
-        const parent: Instance = parentFiber.stateNode;
-        const before = getHostSibling(finishedWork);
+        const parent: Instance = parentFiber.stateNode; // 获取父节点的dom节点
+        const before = getHostSibling(finishedWork); // 获取后一个兄弟节点
         // We only have the top Fiber that was inserted but we need to recurse down its
         // children to find all the terminal nodes.
         insertOrAppendPlacementNode(finishedWork, before, parent);
@@ -1855,7 +1857,7 @@ function commitPlacement(finishedWork: Fiber): void {
     }
     // eslint-disable-next-line no-fallthrough
     case HostComponent: {
-      const parent: Instance = parentFiber.stateNode;
+      const parent: Instance = parentFiber.stateNode; //
       if (parentFiber.flags & ContentReset) {
         // Reset the text content of the parent before doing any insertions
         resetTextContent(parent);
@@ -1930,8 +1932,10 @@ function insertOrAppendPlacementNode(
   if (isHost) {
     const stateNode = node.stateNode;
     if (before) {
+      // 插入
       insertBefore(parent, stateNode, before);
     } else {
+      // parent下新增
       appendChild(parent, stateNode);
     }
   } else if (
@@ -2530,6 +2534,7 @@ function recursivelyTraverseMutationEffects(
 ) {
   // Deletions effects can be scheduled on any fiber type. They need to happen
   // before the children effects hae fired.
+  // 删除被标记的Fiber节点
   const deletions = parentFiber.deletions;
   if (deletions !== null) {
     for (let i = 0; i < deletions.length; i++) {
@@ -2543,10 +2548,12 @@ function recursivelyTraverseMutationEffects(
   }
 
   const prevDebugFiber = getCurrentDebugFiberInDEV();
+  // 子节点有跟MutationMask相关的副作用
   if (parentFiber.subtreeFlags & MutationMask) {
     let child = parentFiber.child;
     while (child !== null) {
       setCurrentDebugFiberInDEV(child);
+      // 遍历递归去执行commitMuftationEffectsOnFiber
       commitMutationEffectsOnFiber(child, root, lanes);
       child = child.sibling;
     }
@@ -2560,8 +2567,8 @@ function commitMutationEffectsOnFiber(
   root: FiberRoot,
   lanes: Lanes,
 ) {
-  const current = finishedWork.alternate;
-  const flags = finishedWork.flags;
+  const current = finishedWork.alternate; // 获取current fiber
+  const flags = finishedWork.flags; // 获取节点的副作用，比如更新、显影等
 
   // The effect flag should be checked *after* we refine the type of fiber,
   // because the fiber tag is more specific. An exception is any flag related
@@ -2571,17 +2578,22 @@ function commitMutationEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      // 删除节点，和遍历递归处理
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
+      // 处理插入逻辑
       commitReconciliationEffects(finishedWork);
 
       // const Update = /*                       */ 0b000000000000000000000000100;
+      // 更新的情况
       if (flags & Update) {
         try {
+          // 处理unmount，destory
           commitHookEffectListUnmount(
             HookInsertion | HookHasEffect,
             finishedWork,
             finishedWork.return,
           );
+          // 执行effect
           commitHookEffectListMount(
             HookInsertion | HookHasEffect, // 2 | 1 = 3
             finishedWork,
@@ -2998,6 +3010,7 @@ function commitReconciliationEffects(finishedWork: Fiber) {
   // before the effects on this fiber have fired.
   // Placement（插入和重新排序）副作用可以发生在任何fiber类型上，但是他们需要在自身副作用发生之前被调用，在子节点副作用发生之后被调用
   const flags = finishedWork.flags;
+  // 执行插入逻辑
   if (flags & Placement) {
     try {
       commitPlacement(finishedWork);
@@ -3008,6 +3021,7 @@ function commitReconciliationEffects(finishedWork: Fiber) {
     // inserted, before any life-cycles like componentDidMount gets called.
     // TODO: findDOMNode doesn't rely on this any more but isMounted does
     // and isMounted is deprecated anyway so we should be able to kill this.
+    // 处理完插入逻辑后，消除插入逻辑
     finishedWork.flags &= ~Placement;
   }
   if (flags & Hydrating) {

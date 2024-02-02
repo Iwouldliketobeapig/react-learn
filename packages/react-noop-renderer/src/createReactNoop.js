@@ -128,11 +128,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     appendChildToContainerOrInstance(parentInstance, child);
   }
 
+  // 有可能是新插入，也有可能换位置
   function insertInContainerOrInstanceBefore(
     parentInstance: Container | Instance,
     child: Instance | TextInstance,
     beforeChild: Instance | TextInstance,
   ): void {
+    // 如果chilid存在，删除child
     const index = parentInstance.children.indexOf(child);
     if (index !== -1) {
       parentInstance.children.splice(index, 1);
@@ -141,6 +143,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     if (beforeIndex === -1) {
       throw new Error('This child does not exist.');
     }
+    // 然后插入进去
     parentInstance.children.splice(beforeIndex, 0, child);
   }
 

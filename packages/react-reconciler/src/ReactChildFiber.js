@@ -288,7 +288,9 @@ type ChildReconciler = (
  * @param {boolean} shouldTrackSideEffects true是更新，false为初始挂载
 */
 function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
+  // 将要删除的子节点推送到父节点的deletions中
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
+    // 初始挂载的时候不需要处理
     if (!shouldTrackSideEffects) {
       // Noop.
       return;
@@ -302,11 +304,12 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     }
   }
 
-  // 用来删除节点
+  // 批量删除节点
   function deleteRemainingChildren(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
   ): null {
+    // 初始挂载的时候不需要处理
     if (!shouldTrackSideEffects) {
       // Noop.
       return null;
@@ -411,7 +414,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
       return created;
     } else {
       // Update
-      // 节点复用
+      // fiber节点复用
       const existing = useFiber(current, textContent);
       existing.return = returnFiber;
       return existing;
@@ -589,6 +592,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return null;
   }
 
+  // LEARN updateSlot
   function updateSlot(
     returnFiber: Fiber,
     oldFiber: Fiber | null,
