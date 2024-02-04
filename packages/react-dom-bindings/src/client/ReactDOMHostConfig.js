@@ -499,10 +499,11 @@ export function commitUpdate(
   newProps: Props,
   internalInstanceHandle: Object,
 ): void {
-  // Apply the diff to the DOM node.
+  // Apply the diff to the DOM node. 更新对应的dom节点的属性
   updateProperties(domElement, updatePayload, type, oldProps, newProps);
   // Update the props handle so that we know which props are the ones with
   // with current event handlers.
+  // 在dom节点上挂载这一次渲染的props
   updateFiberProps(domElement, newProps);
 }
 

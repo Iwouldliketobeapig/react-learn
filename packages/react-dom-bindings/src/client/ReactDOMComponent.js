@@ -360,8 +360,8 @@ function updateDOMProperties(
 ): void {
   // TODO: Handle wasCustomComponentTag
   for (let i = 0; i < updatePayload.length; i += 2) {
-    const propKey = updatePayload[i];
-    const propValue = updatePayload[i + 1];
+    const propKey = updatePayload[i]; // 更新的属性
+    const propValue = updatePayload[i + 1]; // 更新的属性值
     if (propKey === STYLE) {
       setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
@@ -811,6 +811,7 @@ export function updateProperties(
   // Update checked *before* name.
   // In the middle of an update, it is possible to have multiple checked.
   // When a checked radio tries to change name, browser makes another radio's checked false.
+  // 处理input type为radio的情况
   if (
     tag === 'input' &&
     nextRawProps.type === 'radio' &&

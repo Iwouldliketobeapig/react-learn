@@ -2578,22 +2578,29 @@ function commitMutationEffectsOnFiber(
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      /**
+       * 所以这里的顺序
+       * 1. 删除节点
+       * 2. 执行dome的插入逻辑
+       * 3. 如果有更新标记执行useEffect的destory
+       * 4. 执行useEffect
+       * 5. 执行layoutEffect的destory
+      */
       // 删除节点，和遍历递归处理
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
-      // 处理插入逻辑
+      // dom处理插入逻辑
       commitReconciliationEffects(finishedWork);
 
       // const Update = /*                       */ 0b000000000000000000000000100;
-      // 更新的情况
       if (flags & Update) {
         try {
-          // 处理unmount，destory
+          // 处理hook的unmount，即useEffect时返回的函数destory
           commitHookEffectListUnmount(
             HookInsertion | HookHasEffect,
             finishedWork,
             finishedWork.return,
           );
-          // 执行effect
+          // 执行hookeffect
           commitHookEffectListMount(
             HookInsertion | HookHasEffect, // 2 | 1 = 3
             finishedWork,
@@ -2620,6 +2627,7 @@ function commitMutationEffectsOnFiber(
           recordLayoutEffectDuration(finishedWork);
         } else {
           try {
+            // 执行Layout的destory
             commitHookEffectListUnmount(
               HookLayout | HookHasEffect,
               finishedWork,
@@ -2633,6 +2641,7 @@ function commitMutationEffectsOnFiber(
       return;
     }
     case ClassComponent: {
+      // 跟Function组件一样的操作的前两步操作
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
@@ -2697,7 +2706,9 @@ function commitMutationEffectsOnFiber(
       }
     }
     // eslint-disable-next-line-no-fallthrough
+    // dom节点部分
     case HostComponent: {
+      // 常规逻辑
       recursivelyTraverseMutationEffects(root, finishedWork, lanes);
       commitReconciliationEffects(finishedWork);
 
@@ -2722,10 +2733,13 @@ function commitMutationEffectsOnFiber(
           }
         }
 
+        // 存在更新
         if (flags & Update) {
+          // 获取dom实例
           const instance: Instance = finishedWork.stateNode;
           if (instance != null) {
             // Commit the work prepared earlier.
+            // 新的props
             const newProps = finishedWork.memoizedProps;
             // For hydration we reuse the update path but we treat the oldProps
             // as the newProps. The updatePayload will contain the real change in
@@ -2737,6 +2751,7 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
             if (updatePayload !== null) {
+              // 提交更新
               try {
                 commitUpdate(
                   instance,

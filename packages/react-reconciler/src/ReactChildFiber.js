@@ -298,7 +298,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     const deletions = returnFiber.deletions;
     if (deletions === null) {
       returnFiber.deletions = [childToDelete];
-      returnFiber.flags |= ChildDeletion;
+      returnFiber.flags |= ChildDeletion; // 给flags添加了有子节点需要删除的标志
     } else {
       deletions.push(childToDelete);
     }
@@ -351,7 +351,6 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     // to forget to do before returning it. E.g. for the single child case.
     // 复用节点
     const clone = createWorkInProgress(fiber, pendingProps);
-    // 文本节点一定是单节点，index一定为0，且没有兄弟节点
     clone.index = 0;
     clone.sibling = null;
     return clone;
@@ -1236,10 +1235,10 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
             return existing;
           }
         }
-        // Didn't match. 类型不同，直接干掉
         deleteRemainingChildren(returnFiber, child);
         break;
       } else {
+        // 如果key不相同，删除节点
         deleteChild(returnFiber, child);
       }
       child = child.sibling;
