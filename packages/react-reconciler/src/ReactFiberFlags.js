@@ -24,7 +24,7 @@ export const Update = /*                       */ 0b000000000000000000000000100;
 /* Skipped value:                                 0b000000000000000000000001000; */
 
 export const ChildDeletion = /*                */ 0b000000000000000000000010000;
-export const ContentReset = /*                 */ 0b000000000000000000000100000;
+export const ContentReset = /*                 */ 0b000000000000000000000100000; 
 export const Callback = /*                     */ 0b000000000000000000001000000;
 /* Used by DidCapture:                            0b000000000000000000010000000; */
 

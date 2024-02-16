@@ -665,6 +665,7 @@ export function readContext<T>(context: ReactContext<T>): T {
     }
   }
 
+  // 获取context的值
   const value = isPrimaryRenderer
     ? context._currentValue
     : context._currentValue2;
@@ -672,12 +673,14 @@ export function readContext<T>(context: ReactContext<T>): T {
   if (lastFullyObservedContext === context) {
     // Nothing to do. We already observe everything in this context.
   } else {
+    // 链表
     const contextItem = {
       context: ((context: any): ReactContext<mixed>),
       memoizedValue: value,
       next: null,
     };
 
+    // 处理第一个context，这玩意居然没有跟其他hook存在一起
     if (lastContextDependency === null) {
       if (currentlyRenderingFiber === null) {
         throw new Error(
@@ -690,6 +693,7 @@ export function readContext<T>(context: ReactContext<T>): T {
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
+      // 将context挂载到dependencies上
       currentlyRenderingFiber.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
@@ -699,6 +703,7 @@ export function readContext<T>(context: ReactContext<T>): T {
       }
     } else {
       // Append a new context item.
+      // 这玩意却又是一个链表
       lastContextDependency = lastContextDependency.next = contextItem;
     }
   }

@@ -2725,7 +2725,7 @@ function commitMutationEffectsOnFiber(
         // rely on mutating the flag during commit. Like by setting a flag
         // during the render phase instead.
         if (finishedWork.flags & ContentReset) {
-          const instance: Instance = finishedWork.stateNode;
+          const instance: Instance = finishedWork.stateNode; // 获取dom实例
           try {
             resetTextContent(instance);
           } catch (error) {
