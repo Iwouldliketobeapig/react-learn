@@ -16,26 +16,27 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
   // function. Warn to reserve for future use?
 
   const context: ReactContext<T> = {
-    $$typeof: REACT_CONTEXT_TYPE,
+    $$typeof: REACT_CONTEXT_TYPE, // type类型
     // As a workaround to support multiple concurrent renderers, we categorize
     // some renderers as primary and others as secondary. We only expect
     // there to be two concurrent renderers at most: React Native (primary) and
     // Fabric (secondary); React DOM (primary) and React ART (secondary).
     // Secondary renderers store their context values on separate fields.
-    _currentValue: defaultValue,
-    _currentValue2: defaultValue,
+    _currentValue: defaultValue, // 这里存了默认值
+    _currentValue2: defaultValue, // 这里存了默认值
     // Used to track how many concurrent renderers this context currently
     // supports within in a single renderer. Such as parallel server rendering.
     _threadCount: 0,
     // These are circular
-    Provider: (null: any),
-    Consumer: (null: any),
+    Provider: (null: any), // 提供者
+    Consumer: (null: any), // 使用者
 
     // Add these to use same hidden class in VM as ServerContext
     _defaultValue: (null: any),
     _globalName: (null: any),
   };
 
+  // 设置提供Provider
   context.Provider = {
     $$typeof: REACT_PROVIDER_TYPE,
     _context: context,
@@ -125,6 +126,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     // $FlowFixMe: Flow complains about missing properties because it doesn't understand defineProperty
     context.Consumer = Consumer;
   } else {
+    // Consumer就是context
     context.Consumer = context;
   }
 
@@ -133,5 +135,6 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     context._currentRenderer2 = null;
   }
 
+  // 返回一个context
   return context;
 }

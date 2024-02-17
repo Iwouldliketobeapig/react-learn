@@ -4041,7 +4041,9 @@ function beginWork(
       );
     }
     case FunctionComponent: {
+      // 获取函数组件编译后的函数
       const Component = workInProgress.type;
+      // 获取更新的props
       const unresolvedProps = workInProgress.pendingProps;
       const resolvedProps =
         workInProgress.elementType === Component

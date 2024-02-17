@@ -9,6 +9,7 @@
 
 import assign from 'shared/assign';
 
+// 合并props
 export function resolveDefaultProps(Component: any, baseProps: Object): Object {
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
