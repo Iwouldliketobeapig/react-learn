@@ -314,6 +314,7 @@ if (__DEV__) {
   didWarnAboutDefaultPropsOnFunctionComponent = {};
 }
 
+// 确定更新还是挂载，mountChildFIbers和reconcileChildFibers实际上走的是一个方法createChildReconciler，传入的参数不同，true表示更新，false表示挂载
 export function reconcileChildren(
   current: Fiber | null,
   workInProgress: Fiber,

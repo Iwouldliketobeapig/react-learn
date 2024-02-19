@@ -2336,9 +2336,11 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   const current = unitOfWork.alternate;
   setCurrentDebugFiberInDEV(unitOfWork);
 
+  // 用来储存下一个需要处理的fiber节点
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
+    // 开始对fiber节点就行工作，并返回下一个需要处理的fiber节点
     next = beginWork(current, unitOfWork, renderLanes);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
@@ -2348,9 +2350,10 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   resetCurrentDebugFiberInDEV();
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
-    // If this doesn't spawn new work, complete the current work.
+    // If this doesn't spawn new work, complete the current work. 如果为空就证明这一次调度已经完成
     completeUnitOfWork(unitOfWork);
   } else {
+    // 将next赋值给workInProgress
     workInProgress = next;
   }
 

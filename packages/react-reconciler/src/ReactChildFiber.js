@@ -1183,6 +1183,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
     return created;
   }
 
+  // 单节点对比
   function reconcileSingleElement(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
@@ -1407,6 +1408,7 @@ function createChildReconciler(shouldTrackSideEffects): ChildReconciler {
   return reconcileChildFibers;
 }
 
+// 更新时候
 export const reconcileChildFibers: ChildReconciler = createChildReconciler(
   true,
 );
