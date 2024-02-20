@@ -247,6 +247,7 @@ function markUpdateLaneFromFiberToRoot(
   }
 }
 
+// 向上查找获取根节点
 function getRootForUpdatedFiber(sourceFiber: Fiber): FiberRoot | null {
   // TODO: We will detect and infinite update loop and throw even if this fiber
   // has already unmounted. This isn't really necessary but it happens to be the
